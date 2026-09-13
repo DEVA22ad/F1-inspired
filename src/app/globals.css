@@ -51,16 +51,28 @@ nextjs-portal,
   visibility: hidden !important;
 }
 
+/* Fixed High-Performance Cinematic Canvas with Post-Processing Grade */
+#f1-canvas {
+  filter: contrast(1.08) saturate(1.15) brightness(1.02);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
 /* Cinematic Vignette */
 .vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    circle at center,
-    rgba(5, 5, 5, 0) 40%,
-    rgba(5, 5, 5, 0.45) 80%,
+    circle at 50% 45%,
+    rgba(5, 5, 5, 0) 45%,
+    rgba(5, 5, 5, 0.35) 75%,
     rgba(5, 5, 5, 0.85) 100%
   );
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 /* Film Grain Texture */
@@ -68,7 +80,9 @@ nextjs-portal,
   position: absolute;
   inset: 0;
   opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  pointer-events: none;
 }
 
 /* Viewport Corner Brackets */

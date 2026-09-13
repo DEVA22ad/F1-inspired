@@ -117,7 +117,11 @@ export default function CinematicCanvas() {
         if (signal && signal.aborted) return null;
 
         if (HAS_IMAGE_BITMAP) {
-          const bitmap = await createImageBitmap(blob, { premultiplyAlpha: "none" });
+          const bitmap = await createImageBitmap(blob, {
+            premultiplyAlpha: "none",
+            colorSpaceConversion: "default",
+            resizeQuality: "high",
+          });
           return bitmap;
         } else {
           return new Promise((resolve, reject) => {
@@ -145,7 +149,11 @@ export default function CinematicCanvas() {
             const fallbackResp = await fetch(fallbackUrl, signal ? { signal } : {});
             const fallbackBlob = await fallbackResp.blob();
             if (HAS_IMAGE_BITMAP) {
-              return await createImageBitmap(fallbackBlob);
+              return await createImageBitmap(fallbackBlob, {
+                premultiplyAlpha: "none",
+                colorSpaceConversion: "default",
+                resizeQuality: "high",
+              });
             }
           } catch (_) {}
         }
@@ -224,12 +232,14 @@ export default function CinematicCanvas() {
       const ih = asset.height || (asset as HTMLImageElement).naturalHeight || 1080;
 
       const scale = Math.max(cw / iw, ch / ih);
-      const dw = iw * scale;
-      const dh = ih * scale;
-      const dx = (cw - dw) * 0.5;
-      const dy = (ch - dh) * 0.5;
+      const dw = Math.round(iw * scale);
+      const dh = Math.round(ih * scale);
+      const dx = Math.round((cw - dw) * 0.5);
+      const dy = Math.round((ch - dh) * 0.5);
 
       try {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
         ctx.drawImage(asset, dx, dy, dw, dh);
       } catch (_) {}
     }
@@ -289,7 +299,7 @@ export default function CinematicCanvas() {
 
     function resizeCanvas() {
       if (!canvas) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
       const width = window.innerWidth;
       const height = window.innerHeight;
 
@@ -297,6 +307,11 @@ export default function CinematicCanvas() {
       canvas.height = Math.round(height * dpr);
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
+
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+      }
 
       renderCurrentState();
     }
