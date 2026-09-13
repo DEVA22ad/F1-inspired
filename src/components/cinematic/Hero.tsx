@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { scrollBridge } from "@/lib/animation/scroll";
 import { computeHeroTimeline } from "@/lib/animation/hero";
+import { autoScroll } from "@/lib/animation/autoScroll";
 
 export default function Hero() {
   const sectionRef = useRef<HTMLElement | null>(null);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
 
   // 1. System Boot Micro UI
   const bootContainerRef = useRef<HTMLDivElement | null>(null);
@@ -39,6 +41,10 @@ export default function Hero() {
 
   useEffect(() => {
     const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const unsubAuto = autoScroll.subscribe((active) => {
+      setIsAutoScrolling(active);
+    });
 
     const unsubscribe = scrollBridge.subscribe((progress) => {
       const section = sectionRef.current;
@@ -154,9 +160,15 @@ export default function Hero() {
     });
 
     return () => {
+      unsubAuto();
       unsubscribe();
     };
   }, []);
+
+  const handleToggleAutoScroll = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    autoScroll.toggle();
+  };
 
   return (
     <section
@@ -256,19 +268,49 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Supporting Statement & Telemetry Tag */}
+        {/* Supporting Statement & Actions */}
         <div
           ref={statementRef}
-          className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pt-3 border-t border-white/10 max-w-xl will-change-[transform,opacity]"
+          className="flex flex-col gap-4 pt-3 border-t border-white/10 max-w-xl will-change-[transform,opacity]"
           style={{ opacity: 0 }}
         >
-          <div className="text-[clamp(0.85rem,1.1vw,1.05rem)] leading-snug font-light text-text-secondary">
-            <p className="text-text-primary font-normal">A machine shaped by speed,</p>
-            <p className="text-text-secondary">precision and aerodynamic control.</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
+            <div className="text-[clamp(0.85rem,1.1vw,1.05rem)] leading-snug font-light text-text-secondary">
+              <p className="text-text-primary font-normal">A machine shaped by speed,</p>
+              <p className="text-text-secondary">precision and aerodynamic control.</p>
+            </div>
+            <div className="hidden sm:flex flex-col items-end gap-0.5 font-mono text-right">
+              <span className="text-[0.6rem] tracking-[0.14em] text-text-muted">AERO CONFIG</span>
+              <span className="text-[0.7rem] tracking-wider text-text-primary">LOW DRAG // APEX SPEC</span>
+            </div>
           </div>
-          <div className="hidden sm:flex flex-col items-end gap-0.5 font-mono text-right">
-            <span className="text-[0.6rem] tracking-[0.14em] text-text-muted">AERO CONFIG</span>
-            <span className="text-[0.7rem] tracking-wider text-text-primary">LOW DRAG // APEX SPEC</span>
+
+          {/* Primary Action Button: INITIATE AUTO DRIVE */}
+          <div className="flex items-center gap-3 pt-1 pointer-events-auto">
+            <button
+              type="button"
+              onClick={handleToggleAutoScroll}
+              aria-label={isAutoScrolling ? "Pause auto drive" : "Start cinematic auto drive"}
+              className={`group relative inline-flex items-center gap-3 px-6 py-3 font-mono text-xs md:text-sm tracking-[0.22em] text-white uppercase border rounded-xs backdrop-blur-md transition-all duration-300 cursor-pointer ${
+                isAutoScrolling
+                  ? "bg-accent-red/20 border-accent-red shadow-[0_0_20px_rgba(225,6,0,0.4)]"
+                  : "bg-black/60 border-accent-red/60 hover:border-accent-red hover:bg-accent-red/15 shadow-[0_0_15px_rgba(225,6,0,0.25)] hover:shadow-[0_0_25px_rgba(225,6,0,0.4)]"
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                  isAutoScrolling
+                    ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"
+                    : "bg-accent-red shadow-[0_0_8px_var(--accent-red-glow)] group-hover:scale-125"
+                }`}
+              />
+              <span className="font-semibold text-text-primary">
+                {isAutoScrolling ? "PAUSE AUTO DRIVE" : "INITIATE AUTO DRIVE"}
+              </span>
+              <span className="text-accent-red group-hover:translate-x-1 transition-transform duration-300 ease-out text-sm">
+                {isAutoScrolling ? "❚❚" : "▶"}
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -294,12 +336,14 @@ export default function Hero() {
       {/* 6. Intentional Scroll Initiation Cue */}
       <div
         ref={cueRef}
-        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2 font-mono text-[0.65rem] tracking-[0.2em] text-white/60 will-change-[opacity,transform] select-none"
+        onClick={handleToggleAutoScroll}
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex flex-col items-center gap-2 font-mono text-[0.65rem] tracking-[0.2em] text-white/60 will-change-[opacity,transform] select-none cursor-pointer group"
+        aria-label={isAutoScrolling ? "Pause auto drive" : "Click to start auto drive or scroll manually"}
       >
-        <div className="flex items-center gap-2 px-3 py-1 bg-black/40 border border-white/10 rounded-xs backdrop-blur-sm">
-          <span ref={cueDotRef} className="w-1.5 h-1.5 bg-white/80 rounded-full" />
-          <span ref={cueTextRef} className="uppercase font-medium text-white tracking-widest">
-            SCROLL TO INITIATE
+        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-black/60 border border-white/15 rounded-xs backdrop-blur-md group-hover:border-accent-red/60 transition-colors">
+          <span ref={cueDotRef} className={`w-1.5 h-1.5 rounded-full inline-block ${isAutoScrolling ? "bg-accent-red animate-pulse" : "bg-white/80"}`} />
+          <span ref={cueTextRef} className="uppercase font-medium text-white tracking-widest group-hover:text-accent-red transition-colors">
+            {isAutoScrolling ? "AUTO DRIVE ACTIVE" : "SCROLL TO INITIATE"}
           </span>
         </div>
         <div className="w-px h-5 bg-white/15 relative overflow-hidden">
@@ -309,3 +353,4 @@ export default function Hero() {
     </section>
   );
 }
+
